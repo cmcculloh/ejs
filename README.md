@@ -87,6 +87,11 @@ Therefore, we do not recommend using this shortcut.
   - `async`                 When `true`, EJS will use an async function for rendering. (Depends
     on async/await support in the JS runtime.
 
+Set these options globally in your app.js like so:
+```
+app.set('view options', { root: path.join(__dirname, 'root-directory-here') });
+```
+
 This project uses [JSDoc](http://usejsdoc.org/). For the full public API
 documentation, clone the repository and run `npm run doc`. This will run JSDoc
 with the proper options and output the documentation to `out/`. If you want
@@ -110,9 +115,21 @@ For the full syntax documentation, please see [docs/syntax.md](https://github.co
 ## Includes
 
 Includes either have to be an absolute path, or, if not, are assumed as
-relative to the template with the `include` call. For example if you are
-including `./views/user/show.ejs` from `./views/users.ejs` you would
-use `<%- include('user/show') %>`.
+relative to the path to the template with the `include` call, but will check that path in each view in the order they are listed in the app's settings. For example, given the following config:
+```
+// view engine setup
+// https://expressjs.com/en/4x/api.html#app.set
+// views are looked up in the order they occur in the array (earlier takes precedence over later --cascade flows reverse of the way it does in CSS)
+app.set('views', [
+  path.join(__dirname, 'your-code-here'),
+  path.join(__dirname, 'product-templates'), 
+  path.join(__dirname, 'engine')
+]);
+
+app.set('view engine', 'ejs');
+```
+if you are including `/product-templates/views/user/show.ejs` from `/engine/views/users.ejs` you would
+use `<%- include('user/show') %>`. Because EJS will check each path in the views array, it will first look inside of `/your-code-here/views/user/` for the `show.ejs` file. If it doesn't exist, it will move on to look in `/product-templates/views/user/` for the `show.ejs` file. If it finds it, it will use and display _that_ file, even if there is a file of the same name inside of `/engine/views/user/` of the name `show.ejs`. This allows you to override files.
 
 You must specify the `filename` option for the template with the `include`
 call unless you are using `renderFile()`.
